@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BackendDevIntroRazorWebApp.Models;
+using Microsoft.Data.SqlClient;
 
 namespace BackendDevIntroRazorWebApp.Services
 {
@@ -11,39 +12,34 @@ namespace BackendDevIntroRazorWebApp.Services
         static List<Customer> Customers { get; }
         static CustomersService()
         {
-            Customers = new List<Customer>
+            Customers = new List<Customer>();
+        }
+
+        public static List<Customer> GetAll()
+        {
+            string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                new Customer { CustomerID = "ABC", CompanyName = "Classic Italian" },
-                new Customer { CustomerID = "DEF", CompanyName = "Veggie" }
-            };
-        }
+                connection.Open();
 
-        public static List<Customer> GetAll() => Customers;
+                String sql = "SELECT CustomerID, CompanyName FROM Customers";
 
-        public static Customer Get(string customerID) => Customers.FirstOrDefault(p => p.CustomerID == customerID);
-
-        public static void Add(Customer customer)
-        {
-            Customers.Add(customer);
-        }
-
-        public static void Delete(string customerID)
-        {
-            var customer = Get(customerID);
-            if (customer is null)
-                return;
-
-            Customers.Remove(customer);
-        }
-
-        public static void Update(Customer customer)
-        {
-            var index = Customers.FindIndex(p => p.CustomerID == customer.CustomerID);
-            if (index == -1)
-                return;
-
-            Customers[index] = customer;
-
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Customer customer = new Customer();
+                            customer.CustomerID = reader.GetString(0);
+                            customer.CompanyName = reader.GetString(1);
+                            Customers.Add(customer);
+                        }
+                    }
+                }
+                return Customers;
+            }
         }
     }
 }
