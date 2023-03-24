@@ -29,6 +29,7 @@ namespace BackendDevIntroRazorWebApp.Services
                 {
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
+                        Customers.Clear();
                         while (reader.Read())
                         {
                             Customer customer = new Customer();
